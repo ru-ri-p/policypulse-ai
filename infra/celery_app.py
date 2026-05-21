@@ -48,4 +48,9 @@ app.conf.beat_schedule = {
         "schedule": crontab(hour=12, minute=0),
         "kwargs": {"limit": 50},
     },
+    "nightly-relevance-alerts": {
+        "task": "ingestion.tasks.run_nightly_relevance_alerts",
+        "schedule": crontab(hour=7, minute=0),
+        "kwargs": {"hours": 24},
+    },
 }

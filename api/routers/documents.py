@@ -28,19 +28,20 @@ class DocumentResponse(BaseModel):
     summary: Optional[str] = None
     change_percent: Optional[float] = None
     is_major_change: Optional[bool] = None
+    change_summary: Optional[str] = None
     digest: Optional[DigestFields] = None
 
 
 def _row_to_document(row) -> DocumentResponse:
     digest = None
-    if row[9]:
+    if row[10]:
         digest = DigestFields(
-            what_changed=row[9],
-            who_is_affected=row[10],
-            what_to_do=row[11],
-            urgency=row[12],
-            key_deadline=row[13],
-            generated_at=row[14].isoformat() if row[14] else None,
+            what_changed=row[10],
+            who_is_affected=row[11],
+            what_to_do=row[12],
+            urgency=row[13],
+            key_deadline=row[14],
+            generated_at=row[15].isoformat() if row[15] else None,
         )
     return DocumentResponse(
         id=row[0],
@@ -52,13 +53,14 @@ def _row_to_document(row) -> DocumentResponse:
         summary=row[6],
         change_percent=row[7],
         is_major_change=row[8],
+        change_summary=row[9],
         digest=digest,
     )
 
 
 _DOCUMENT_SELECT = """
     SELECT id, title, url, jurisdiction, doc_type_classified, risk_level, summary,
-           change_percent, is_major_change,
+           change_percent, is_major_change, change_summary,
            digest_what_changed, digest_who_affected, digest_what_to_do,
            digest_urgency, digest_key_deadline, digest_generated_at
 """

@@ -1,135 +1,167 @@
 # PolicyPulse AI
 
-Track AI policy documents from EU and US sources. Scrapes policy text, stores it in PostgreSQL with pgvector, and will add embeddings, relevance scoring, and digests in later phases.
+**AI policy monitoring for compliance and research teams.** Ingests documents from EU, US, UK, and OECD sources; tracks changes; classifies risk; enables semantic search and LLM compliance digests; delivers personalised feeds and alerts.
+
+| | |
+|---|---|
+| **API** | FastAPI + JWT — http://localhost:8000/docs |
+| **Dashboard** | Streamlit — http://localhost:8501 |
+| **Live demo** | _Add your Railway/Render URL after deploy_ |
+| **Repo** | https://github.com/ru-ri-p/policypulse-ai |
+
+## Who it is for
+
+- **Compliance / legal** — monitor binding rules and guidance across jurisdictions  
+- **Policy researchers** — searchable corpus with change history  
+- **AI governance leads** — risk labels, digests, and relevance-scored feeds  
+
+## Architecture
+
+```mermaid
+flowchart TB
+  subgraph sources [Policy sources]
+    EU[EU AI Act]
+    US[US Federal Register]
+    UK[UK ICO / AISI]
+    OECD[OECD.AI]
+  end
+  subgraph ingest [Ingestion]
+    SP[Scrapy spiders]
+    PP[Postgres pipeline]
+    CD[Change detector]
+  end
+  subgraph async [Workers]
+    CW[Celery + Redis]
+    ML[Classifier / summariser / embedder]
+    DG[Digest generator]
+    RS[Relevance scorer]
+  end
+  DB[(PostgreSQL 16 + pgvector)]
+  API[FastAPI]
+  UI[Streamlit dashboard]
+  sources --> SP --> PP --> DB
+  PP --> CD
+  PP --> CW --> ML --> DB
+  CW --> DG --> DB
+  CW --> RS
+  DB --> API
+  API --> UI
+```
+
+## Quick start
+
+```bash
+cd ~/projects/policypulse-ai
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env   # edit DATABASE_URL, SECRET_KEY, etc.
+```
+
+Database (local Postgres):
+
+```bash
+psql -U ppuser -d policypulse -f ingestion/schema.sql
+python3 -m ingestion.seed_sources
+# Run migrations 002–007 as needed (see docs below)
+```
+
+Run the stack:
+
+```bash
+./scripts/run_api.sh           # :8000
+./scripts/run_dashboard.sh     # :8501
+./scripts/run_tests.sh         # pytest
+```
 
 ## Project structure
 
 | Path | Purpose |
 |------|---------|
-| `ingestion/schema.sql` | Database tables: `sources`, `documents`, `document_versions` |
-| `ingestion/db.py` | Postgres connection helpers (`get_connection`, `run_query`) |
-| `ingestion/seed_sources.py` | Seeds the three policy sources |
-| `ingestion/cleaner.py` | Text cleaning (HTML entities, URLs, whitespace) |
-| `ingestion/change_detector.py` | Detects content changes and archives old versions |
-| `ingestion/inspect_documents.py` | Quick CLI summary of scraped documents |
-| `ingestion/spiders/` | Scrapy project (settings, pipelines, spiders) |
-| `ingestion/spiders/spiders/eu_ai_act.py` | EU AI Act Monitor spider |
-| `ingestion/spiders/spiders/federal_register.py` | US Federal Register API spider |
-| `ingestion/spiders/spiders/nist_airc.py` | NIST AI Resource Center spider |
-| `notebooks/scraping_basics.py` | Day 8: requests + BeautifulSoup tutorial |
-| `scripts/run_spider.sh` | Run any spider from the project root |
-| `test_db.py` | Verify Postgres connection via `.env` |
-
-## Setup
-
-```bash
-cd ~/projects/policypulse-ai
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-Create `.env` (see course guide) and apply schema:
-
-```bash
-psql -U ppuser -d policypulse -f ingestion/schema.sql
-python3 -m ingestion.seed_sources
-```
+| `ingestion/spiders/` | Scrapy spiders (EU, US, UK, OECD, NIST, ICO, AISI) |
+| `ingestion/pipelines.py` | Postgres upsert + change detection |
+| `ml_pipeline/` | Classification, embeddings, search, diff, processor |
+| `digests/` | GPT-4o-mini compliance digests |
+| `relevance/` | User profile scoring + alerts |
+| `api/` | REST API (documents, search, auth, feed, stats) |
+| `dashboard/` | Streamlit UI |
+| `tests/` | pytest suite (Phase 7) |
+| `docker-compose.yml` | API + Postgres + Redis + dashboard |
 
 ## Run spiders
 
 ```bash
-source .venv/bin/activate
-./scripts/run_spider.sh eu_ai_act
 ./scripts/run_spider.sh federal_register
+./scripts/run_spider.sh eu_ai_act
 ./scripts/run_spider.sh nist_airc
+./scripts/run_spider.sh ico_uk
+./scripts/run_spider.sh oecd_policy      # Phase 7 — OECD Policy Navigator
+./scripts/run_spider.sh uk_aisi          # Phase 7 — UK AI Safety Institute
 python3 -m ingestion.inspect_documents
 ```
 
-Or from `ingestion/`:
+## Tests (Phase 7)
 
 ```bash
-cd ingestion
-scrapy crawl eu_ai_act
+pip install pytest pytest-asyncio httpx
+./scripts/run_tests.sh
 ```
 
-## Utilities
+Covers: text cleaning, diff engine, classifier (mocked), semantic search (mocked), API endpoints (mocked DB).
+
+## Phases (course roadmap)
+
+### Phase 1–3 — Ingestion, Celery, API
+
+- Schema, scrapers, change detection, Redis/Celery scheduling  
+- Migrations: `002_ml_columns.sql`, `005_api_auth.sql`  
+- `./scripts/run_api.sh` → http://localhost:8000/docs  
+
+### Phase 4 — LLM digests
 
 ```bash
-python3 -m ingestion.cleaner
-python3 test_db.py
-```
-
-## Scheduling (Week 3)
-
-```bash
-brew install redis
-brew services start redis
-redis-cli ping   # PONG
-
-./scripts/celery_worker.sh   # terminal 1
-./scripts/celery_beat.sh     # terminal 2
-```
-
-Monitor tasks: `celery -A infra.celery_app flower` (http://localhost:5555)
-
-## Stats
-
-```bash
-python3 -m ingestion.stats
-```
-
-## Machine learning (Week 4)
-
-```bash
-python3 -m ml_pipeline.classify_explore          # Day 22 demo
-python3 -m ml_pipeline.run_classification        # classify all (slow on CPU)
-python3 -m ml_pipeline.run_summarisation         # summarise all (slow on CPU)
-```
-
-Apply ML columns: `psql -U ppuser -d policypulse -f ingestion/migrations/002_ml_columns.sql`
-
-## Semantic search (Week 5)
-
-```bash
-python3 -m notebooks.embeddings_intro
-python3 -m ml_pipeline.embedder --limit 50    # quick test
-python3 -m ml_pipeline.embedder               # all documents (slow)
-python3 -m ml_pipeline.search
-```
-
-## Change detection + full ML processor (Week 6)
-
-```bash
-psql -U ppuser -d policypulse -f ingestion/migrations/004_change_tracking.sql
-python3 -m ml_pipeline.processor --pending --limit 5   # sync batch (slow)
-```
-
-After scrapes, Celery queues `process_document` per doc (requires Redis + worker).
-Phase 2 tag: `git tag v0.2.0` when ready.
-
-## REST API (Phase 3)
-
-```bash
-psql -U ppuser -d policypulse -f ingestion/migrations/005_api_auth.sql
-# Add SECRET_KEY to .env (see .env.example)
-./scripts/run_api.sh
-```
-
-Interactive docs: http://localhost:8000/docs
-
-## LLM digests (Phase 4)
-
-```bash
-psql -U ppuser -d policypulse -f ingestion/migrations/006_digests.sql
 # OPENAI_API_KEY in .env
+psql -U ppuser -d policypulse -f ingestion/migrations/006_digests.sql
 python3 -m digests.run_digests --limit 3
 ```
 
-API: `GET /documents/{id}/digest`
+### Phase 5 — Relevance + alerts
 
-## Phase 1 progress
+```bash
+psql -U ppuser -d policypulse -f ingestion/migrations/007_user_profiles_relevance.sql
+```
 
-- Week 1: Environment, schema, source seeding
-- Week 2: Scrapy spiders, cleaning pipeline, change detection
-- Week 3: Celery scheduling, logging, 100+ documents, stats report
+`POST /user/profile`, `GET /user/feed` (JWT + embeddings on documents).
+
+### Phase 6 — Dashboard + Docker
+
+```bash
+./scripts/run_dashboard.sh
+docker compose up --build
+```
+
+See `docs/phase6_dashboard_deploy.md`.
+
+### Phase 7 — Polish & launch
+
+- Tests: `tests/`  
+- Premium sources: `oecd_policy`, `uk_aisi`  
+- Portfolio checklist: `docs/phase7_polish_launch.md`  
+- Case study outline: `docs/case_study_outline.md`  
+
+**You still do:** 5-min Loom demo, blog post, accelerator applications, screenshots, live URL in README.
+
+## Machine learning (batch, optional)
+
+```bash
+python3 -m ml_pipeline.run_classification   # slow on CPU
+python3 -m ml_pipeline.embedder --limit 50
+python3 -m ml_pipeline.search
+```
+
+## Screenshots
+
+Add PNGs under `docs/screenshots/` (dashboard, search, API docs) and link them here after recording your demo.
+
+## License
+
+MIT — see course / your preference.

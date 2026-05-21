@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routers import alerts, auth_routes, documents, search, sources, users
+from api.routers import alerts, auth_routes, documents, search, sources, stats, users
 
 app = FastAPI(
     title="PolicyPulse AI API",
@@ -24,6 +24,7 @@ app.include_router(sources.router, prefix="/sources", tags=["Sources"])
 app.include_router(auth_routes.router, prefix="/auth", tags=["Authentication"])
 app.include_router(users.router, prefix="/user", tags=["User"])
 app.include_router(alerts.router, prefix="/alerts", tags=["Alerts"])
+app.include_router(stats.router, prefix="/stats", tags=["Stats"])
 
 
 @app.get("/health", tags=["System"])

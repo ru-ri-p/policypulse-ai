@@ -31,6 +31,16 @@ sources = [
         "url": "https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/artificial-intelligence/",
         "jurisdiction": "UK",
     },
+    {
+        "name": "OECD AI Policy Observatory",
+        "url": "https://oecd.ai/en/dashboards/policy-initiatives",
+        "jurisdiction": "OECD",
+    },
+    {
+        "name": "UK AI Safety Institute",
+        "url": "https://www.gov.uk/government/organisations/ai-safety-institute",
+        "jurisdiction": "UK",
+    },
 ]
 
 

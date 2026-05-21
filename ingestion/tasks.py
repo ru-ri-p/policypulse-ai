@@ -91,3 +91,13 @@ def generate_pending_digests(limit: int = 25):
     count = run_batch(limit=limit)
     log.info("Generated %s digests", count)
     return {"processed": count}
+
+
+@app.task
+def run_nightly_relevance_alerts(hours: int = 24):
+    """Score recent policy changes and email users when highly relevant + immediate urgency."""
+    from relevance.alert_service import run_nightly_alerts
+
+    result = run_nightly_alerts(hours=hours)
+    log.info("Nightly alerts complete: %s", result)
+    return result

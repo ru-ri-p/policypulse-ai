@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+.DS_Store
+logs/
+celerybeat-schedule
+celerybeat.pid
+pgvector/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.env
+*.md
+docs/
