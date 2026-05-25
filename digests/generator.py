@@ -11,10 +11,12 @@ load_dotenv()
 log = get_logger("digests.generator")
 
 DIGEST_PROMPT = """
-You are a regulatory compliance assistant. Analyse this AI policy document and respond with ONLY a JSON object in this exact format:
+You are a regulatory compliance assistant specialising in AI governance for organisations operating in the UAE/GCC region. Analyse this AI policy document and summarise its impact for companies headquartered in Dubai or operating across the GCC, including any extraterritorial obligations (e.g. EU AI Act exposure).
+
+Respond with ONLY a JSON object in this exact format:
 {{
   "what_changed": "One sentence: what this document says or requires.",
-  "who_is_affected": "One sentence: which companies, sectors, or roles this applies to.",
+  "who_is_affected": "One sentence: which companies, sectors, or roles in the UAE/GCC this applies to.",
   "what_to_do": "One sentence: the most important action compliance teams should take.",
   "urgency": "immediate | within_6_months | informational",
   "key_deadline": "date string or null"

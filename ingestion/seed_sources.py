@@ -41,6 +41,32 @@ sources = [
         "url": "https://www.gov.uk/government/organisations/ai-safety-institute",
         "jurisdiction": "UK",
     },
+    # ── Phase 8: MENA sources ──────────────────────────────────────
+    {
+        "name": "UAE AI Office",
+        "url": "https://u.ae/en/about-the-uae/digital-uae/digital-technology/artificial-intelligence",
+        "jurisdiction": "UAE",
+    },
+    {
+        "name": "Digital Dubai",
+        "url": "https://www.digitaldubai.ae/initiatives/ai-principles",
+        "jurisdiction": "UAE",
+    },
+    {
+        "name": "DIFC Data & AI Regulation",
+        "url": "https://www.difc.ae/business/laws-and-regulations/",
+        "jurisdiction": "UAE",
+    },
+    {
+        "name": "ADGM FSRA",
+        "url": "https://www.adgm.com/media/announcements",
+        "jurisdiction": "UAE",
+    },
+    {
+        "name": "Saudi SDAIA",
+        "url": "https://sdaia.gov.sa/en/default.aspx",
+        "jurisdiction": "SA",
+    },
 ]
 
 

@@ -1,6 +1,6 @@
 # PolicyPulse AI
 
-**AI policy monitoring for compliance and research teams.** Ingests documents from EU, US, UK, and OECD sources; tracks changes; classifies risk; enables semantic search and LLM compliance digests; delivers personalised feeds and alerts.
+**AI policy monitoring for compliance teams in the UAE/GCC and beyond.** Ingests official AI governance documents from UAE, Saudi, EU, US, UK, and OECD sources; tracks changes; classifies risk; enables semantic search and LLM compliance digests; delivers personalised feeds and alerts. Built in Dubai for organisations that must reconcile local AI rules with EU/US extraterritorial exposure.
 
 | | |
 |---|---|
@@ -11,15 +11,18 @@
 
 ## Who it is for
 
-- **Compliance / legal** — monitor binding rules and guidance across jurisdictions  
-- **Policy researchers** — searchable corpus with change history  
-- **AI governance leads** — risk labels, digests, and relevance-scored feeds  
+- **UAE/GCC compliance teams** — track UAE AI Office, DIFC, ADGM, and SDAIA guidance in one feed  
+- **Multinationals in Dubai** — reconcile local + EU AI Act extraterritorial obligations  
+- **Law firms / consultancies** — white-label MENA AI policy intelligence for clients  
+- **AI governance leads** — risk labels, digests, and relevance-scored personalised feeds  
 
 ## Architecture
 
 ```mermaid
 flowchart TB
   subgraph sources [Policy sources]
+    UAE[UAE AI Office / DIFC / ADGM]
+    SA[Saudi SDAIA]
     EU[EU AI Act]
     US[US Federal Register]
     UK[UK ICO / AISI]
@@ -77,7 +80,7 @@ Run the stack:
 
 | Path | Purpose |
 |------|---------|
-| `ingestion/spiders/` | Scrapy spiders (EU, US, UK, OECD, NIST, ICO, AISI) |
+| `ingestion/spiders/` | Scrapy spiders (UAE, SA, EU, US, UK, OECD, NIST, ICO, AISI) |
 | `ingestion/pipelines.py` | Postgres upsert + change detection |
 | `ml_pipeline/` | Classification, embeddings, search, diff, processor |
 | `digests/` | GPT-4o-mini compliance digests |
@@ -90,12 +93,21 @@ Run the stack:
 ## Run spiders
 
 ```bash
+# MENA sources (Phase 8)
+./scripts/run_spider.sh uae_ai_office    # UAE Government AI Portal
+./scripts/run_spider.sh digital_dubai    # Digital Dubai AI Ethics
+./scripts/run_spider.sh adgm_fsra        # ADGM announcements
+./scripts/run_spider.sh difc_laws        # DIFC laws & data protection
+./scripts/run_spider.sh sdaia_saudi      # Saudi SDAIA / NDMO
+
+# Global sources
 ./scripts/run_spider.sh federal_register
 ./scripts/run_spider.sh eu_ai_act
 ./scripts/run_spider.sh nist_airc
 ./scripts/run_spider.sh ico_uk
-./scripts/run_spider.sh oecd_policy      # Phase 7 — OECD Policy Navigator
-./scripts/run_spider.sh uk_aisi          # Phase 7 — UK AI Safety Institute
+./scripts/run_spider.sh oecd_policy
+./scripts/run_spider.sh uk_aisi
+
 python3 -m ingestion.inspect_documents
 ```
 
@@ -147,6 +159,17 @@ See `docs/phase6_dashboard_deploy.md`.
 - Premium sources: `oecd_policy`, `uk_aisi`  
 - Portfolio checklist: `docs/phase7_polish_launch.md`  
 - Case study outline: `docs/case_study_outline.md`  
+
+### Phase 8 — MENA coverage
+
+```bash
+psql -U ppuser -d policypulse -f ingestion/migrations/008_mena_region.sql
+python3 -m ingestion.seed_sources
+./scripts/run_spider.sh uae_ai_office
+./scripts/run_spider.sh adgm_fsra
+```
+
+See `docs/phase8_mena_coverage.md`. Dashboard defaults to **Region = MENA**.
 
 **You still do:** 5-min Loom demo, blog post, accelerator applications, screenshots, live URL in README.
 

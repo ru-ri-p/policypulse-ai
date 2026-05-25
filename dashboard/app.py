@@ -39,11 +39,15 @@ def render_digest(digest: dict | None):
 # ── Sidebar ──────────────────────────────────────────────────────
 with st.sidebar:
     st.title("🔍 PolicyPulse AI")
-    st.markdown("*AI policy monitoring*")
+    st.markdown("*AI policy monitoring — GCC & global*")
     st.caption(f"API: `{API_BASE}`")
     st.divider()
 
-    jurisdiction = st.selectbox("Jurisdiction", ["All", "EU", "US", "UK"])
+    region = st.selectbox("Region", ["All", "MENA", "EU", "US", "UK"], index=1)
+    jurisdiction = st.selectbox(
+        "Jurisdiction",
+        ["All", "UAE", "SA", "EU", "US", "UK", "QA", "BH", "OECD"],
+    )
     risk_level = st.selectbox("Risk level", ["All", "high", "medium", "low"])
     limit = st.slider("Results", 5, 100, 20)
 
@@ -74,6 +78,8 @@ with tab1:
     params = {"limit": limit}
     if jurisdiction != "All":
         params["jurisdiction"] = jurisdiction
+    elif region != "All":
+        params["region"] = region
     if risk_level != "All":
         params["risk_level"] = risk_level
 
@@ -173,18 +179,32 @@ with tab4:
     resp = api_get("/stats/")
     if resp and resp.status_code == 200:
         data = resp.json()
-        c1, c2, c3 = st.columns(3)
+        c1, c2, c3, c4 = st.columns(4)
         c1.metric("Total documents", data.get("total", 0))
         c2.metric("Jurisdictions", len(data.get("by_jurisdiction", {})))
         c3.metric("High risk", data.get("high_risk", 0))
+        mena_count = data.get("by_region", {}).get("MENA", 0)
+        c4.metric("MENA documents", mena_count)
+
+        col_left, col_right = st.columns(2)
+
+        by_region = data.get("by_region", {})
+        if by_region:
+            with col_left:
+                df_r = pd.DataFrame(
+                    [{"region": k, "count": v} for k, v in by_region.items()]
+                )
+                fig_r = px.pie(df_r, names="region", values="count", title="By region")
+                st.plotly_chart(fig_r, use_container_width=True)
 
         by_j = data.get("by_jurisdiction", {})
         if by_j:
-            df = pd.DataFrame(
-                [{"jurisdiction": k, "count": v} for k, v in by_j.items()]
-            )
-            fig = px.pie(df, names="jurisdiction", values="count", title="By jurisdiction")
-            st.plotly_chart(fig, use_container_width=True)
+            with col_right:
+                df = pd.DataFrame(
+                    [{"jurisdiction": k, "count": v} for k, v in by_j.items()]
+                )
+                fig = px.bar(df, x="jurisdiction", y="count", title="By jurisdiction")
+                st.plotly_chart(fig, use_container_width=True)
 
         by_src = data.get("by_source", {})
         if by_src:

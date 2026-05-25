@@ -40,12 +40,16 @@ class PolicyClassifier:
             "European Union policy",
             "United States policy",
             "United Kingdom policy",
+            "United Arab Emirates or Gulf Cooperation Council policy",
+            "Saudi Arabia policy",
         ]
         result = self.classifier(text[:1024], labels)
         label_map = {
             "European Union policy": "EU",
             "United States policy": "US",
             "United Kingdom policy": "UK",
+            "United Arab Emirates or Gulf Cooperation Council policy": "UAE",
+            "Saudi Arabia policy": "SA",
         }
         return {
             "label": label_map.get(result["labels"][0], "EU"),

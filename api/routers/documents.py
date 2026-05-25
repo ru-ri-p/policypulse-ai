@@ -68,18 +68,30 @@ _DOCUMENT_SELECT = """
 
 @router.get("/", response_model=List[DocumentResponse])
 def list_documents(
-    jurisdiction: Optional[str] = Query(None, description="Filter by jurisdiction: EU, US, UK"),
+    jurisdiction: Optional[str] = Query(None, description="Filter by jurisdiction: EU, US, UK, UAE, SA"),
+    region: Optional[str] = Query(None, description="Filter by region: MENA, EU, US, UK"),
     risk_level: Optional[str] = Query(None, description="Filter by risk: high, medium, low"),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ):
     """List policy documents with optional filters."""
+    from ingestion.regions import get_region, JURISDICTION_TO_REGION
+
     where_clauses = []
     params: list = []
 
     if jurisdiction:
         where_clauses.append("jurisdiction = %s")
         params.append(jurisdiction.upper())
+
+    if region and not jurisdiction:
+        region_jurisdictions = [
+            k for k, v in JURISDICTION_TO_REGION.items() if v == region.upper()
+        ]
+        if region_jurisdictions:
+            placeholders = ", ".join(["%s"] * len(region_jurisdictions))
+            where_clauses.append(f"jurisdiction IN ({placeholders})")
+            params.extend(region_jurisdictions)
 
     if risk_level:
         where_clauses.append("risk_level = %s")
