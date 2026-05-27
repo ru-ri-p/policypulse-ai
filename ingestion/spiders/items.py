@@ -10,3 +10,4 @@ class PolicyDocumentItem(scrapy.Item):
     jurisdiction = scrapy.Field()
     published_at = scrapy.Field()
     source_name = scrapy.Field()
+    db_id = scrapy.Field()
