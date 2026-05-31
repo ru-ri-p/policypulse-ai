@@ -17,7 +17,30 @@ app.conf.update(
     enable_utc=True,
 )
 
+# MENA law-focused spiders (UTC) — before EU/US daily runs
+_MENA_SPIDERS = (
+    ("uae_legislation", 6, 0),
+    ("dfsa_rulebook", 6, 15),
+    ("difc_laws", 6, 30),
+    ("adgm_fsra", 6, 45),
+    ("sdaia_saudi", 7, 0),
+    ("uae_ai_office", 7, 15),
+    ("digital_dubai", 7, 30),
+)
+
 app.conf.beat_schedule = {
+    **{
+        f"scrape-mena-{name}-daily": {
+            "task": "ingestion.tasks.run_spider",
+            "schedule": crontab(hour=hour, minute=minute),
+            "args": (name,),
+        }
+        for name, hour, minute in _MENA_SPIDERS
+    },
+    "retag-after-mena-scrape": {
+        "task": "ingestion.tasks.retag_all_documents",
+        "schedule": crontab(hour=7, minute=50),
+    },
     "scrape-eu-ai-act-daily": {
         "task": "ingestion.tasks.run_spider",
         "schedule": crontab(hour=9, minute=0),

@@ -1,0 +1,174 @@
+# GCC regulatory playbooks — zone × sector applicability
+# Used to tag documents and compute impact levels for client profiles.
+
+playbooks:
+  - id: uae_mainland_general
+    name: UAE Mainland — General AI & Data
+    zones: [MAINLAND]
+    sectors: [general, government, technology]
+    jurisdictions: [UAE]
+    url_patterns:
+      - u.ae
+      - uaelegislation.gov.ae
+      - ai.gov.ae
+    title_keywords:
+      - artificial intelligence
+      - data protection
+      - pdpl
+      - digital
+    impact_summary: >
+      Applies to UAE mainland entities under federal PDPL and UAE AI Office guidance.
+
+  - id: difc_financial_services
+    name: DIFC — Financial Services & AI
+    zones: [DIFC]
+    sectors: [financial_services, fintech, insurance]
+    jurisdictions: [UAE]
+    url_patterns:
+      - difc.ae
+      - dfsa.ae
+      - dfsaen.thomsonreuters.com
+    title_keywords:
+      - difc
+      - dfsa
+      - financial
+      - autonomous
+      - data protection
+      - fintech
+    impact_summary: >
+      Binding for DIFC-registered firms; includes DFSA rules and DIFC data/AI instruments.
+
+  - id: adgm_financial_services
+    name: ADGM — Financial Services & AI
+    zones: [ADGM]
+    sectors: [financial_services, fintech, insurance]
+    jurisdictions: [UAE]
+    url_patterns:
+      - adgm.com
+      - fsra.adgm
+    title_keywords:
+      - adgm
+      - fsra
+      - financial
+      - fintech
+      - virtual asset
+    impact_summary: >
+      Applies to ADGM-registered entities under FSRA and ADGM data/AI frameworks.
+
+  - id: cbuae_banking_ai
+    name: CBUAE — Supervised Financial Institutions (AI/ML)
+    zones: [MAINLAND, DIFC, ADGM]
+    sectors: [financial_services, banking, insurance, payments]
+    jurisdictions: [UAE]
+    url_patterns:
+      - centralbank.ae
+      - cbuae
+    title_keywords:
+      - cbuae
+      - central bank
+      - banking
+      - insurance
+      - payment
+      - machine learning
+      - artificial intelligence
+      - enabling technolog
+    impact_summary: >
+      Sectoral floor for UAE banks, insurers, exchange houses, and PSPs adopting AI.
+
+  - id: digital_dubai_tech
+    name: Digital Dubai — AI Ethics & Smart City
+    zones: [MAINLAND]
+    sectors: [technology, government, general]
+    jurisdictions: [UAE]
+    url_patterns:
+      - digitaldubai.ae
+    title_keywords:
+      - ai ethics
+      - digital dubai
+      - smart city
+      - data
+    impact_summary: >
+      Guidance for Dubai government and technology initiatives on responsible AI.
+
+  - id: sdaia_saudi
+    name: Saudi Arabia — SDAIA & PDPL
+    zones: [MAINLAND]
+    sectors: [general, government, financial_services, technology]
+    jurisdictions: [SA]
+    url_patterns:
+      - sdaia.gov.sa
+      - ndmo.gov.sa
+    title_keywords:
+      - sdaia
+      - pdpl
+      - saudi
+      - kingdom
+    impact_summary: >
+      KSA data and AI governance including PDPL and SDAIA frameworks.
+
+  - id: eu_ai_act_exposure
+    name: EU AI Act — Extraterritorial exposure
+    zones: []
+    sectors: [general, financial_services, technology, health]
+    jurisdictions: [EU]
+    url_patterns:
+      - artificialintelligenceact.eu
+      - eur-lex
+      - europa.eu
+    title_keywords:
+      - ai act
+      - european union
+      - high-risk
+      - gpai
+    impact_summary: >
+      Relevant when serving EU customers, processing EU personal data, or placing AI on EU market.
+
+  - id: us_federal_ai_exposure
+    name: US Federal — AI & Tech Policy (partner exposure)
+    zones: []
+    sectors: [general, financial_services, technology, government]
+    jurisdictions: [US]
+    url_patterns:
+      - federalregister.gov
+      - nist.gov
+      - airc.nist.gov
+      - commerce.gov
+      - whitehouse.gov
+    title_keywords:
+      - artificial intelligence
+      - nist
+      - federal
+      - executive order
+    impact_summary: >
+      Relevant for UAE firms with US parents, US cloud contracts, or US market/partner obligations.
+
+  - id: uk_ico_ai
+    name: UK — ICO AI & Data Protection
+    zones: []
+    sectors: [general, technology, financial_services, health]
+    jurisdictions: [UK]
+    url_patterns:
+      - ico.org.uk
+      - gov.uk/government/organisations/ai-safety
+    title_keywords:
+      - ico
+      - uk gdpr
+      - artificial intelligence
+    impact_summary: >
+      Relevant for UK operations, UK customers, or UK group entities.
+
+# Source name → default zones (applied before keyword rules)
+source_zone_hints:
+  DIFC Data & AI Regulation: [DIFC]
+  DFSA Rulebook: [DIFC]
+  ADGM FSRA: [ADGM]
+  UAE Federal Legislation: [MAINLAND]
+  UAE AI Office: [MAINLAND]
+  Digital Dubai: [MAINLAND]
+  Saudi SDAIA: [MAINLAND]
+  US Federal Register - AI: []
+  EU AI Act Monitor: []
+  NIST AI Resource Center: []
+  UK ICO - AI and Data Protection: []
+  UK AI Safety Institute: []
+  OECD AI Policy Observatory: []

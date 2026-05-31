@@ -1,6 +1,7 @@
 # ingestion/spiders/spiders/eu_ai_act.py
 import scrapy
 
+from ingestion.date_extract import extract_published_from_response
 from spiders.items import PolicyDocumentItem
 
 
@@ -44,6 +45,6 @@ class EUAIActSpider(scrapy.Spider):
         item["content"] = content
         item["doc_type"] = "regulation"
         item["jurisdiction"] = "EU"
-        item["published_at"] = None
+        item["published_at"] = extract_published_from_response(response)
         item["source_name"] = "EU AI Act Monitor"
         yield item

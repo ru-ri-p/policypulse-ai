@@ -11,6 +11,7 @@ client = TestClient(app)
 
 
 def _sample_document_row():
+    now = datetime(2026, 5, 20, 12, 0, 0)
     return (
         1,
         "EU AI Act — Title",
@@ -22,6 +23,13 @@ def _sample_document_row():
         5.0,
         False,
         None,
+        now,
+        now,
+        None,
+        0,
+        [],
+        ["financial_services"],
+        {"eu_ai_act_exposure": {"level": "high", "name": "EU AI Act", "summary": "EU scope"}},
         None,
         None,
         None,
@@ -48,6 +56,9 @@ def test_list_documents(mock_run_query):
     assert len(docs) == 1
     assert docs[0]["jurisdiction"] == "EU"
     assert docs[0]["risk_level"] == "high"
+    assert "eu_ai_act_exposure" in docs[0]["playbook_impacts"]
+    assert docs[0]["update_status"] == "updated"
+    assert docs[0]["first_scraped_at"] is not None
 
 
 @patch("api.routers.documents.run_query")

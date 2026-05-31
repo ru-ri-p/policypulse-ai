@@ -10,41 +10,70 @@ log = get_logger("ingestion.tasks")
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INGESTION_DIR = os.path.join(PROJECT_ROOT, "ingestion")
 
+MENA_SPIDER_NAMES = (
+    "uae_legislation",
+    "dfsa_rulebook",
+    "difc_laws",
+    "adgm_fsra",
+    "sdaia_saudi",
+    "uae_ai_office",
+    "digital_dubai",
+)
+
+
+def _run_spider_subprocess(spider_name: str) -> dict:
+    env = os.environ.copy()
+    env["PYTHONPATH"] = PROJECT_ROOT
+    log.info("Starting spider: %s", spider_name)
+
+    result = subprocess.run(
+        ["scrapy", "crawl", spider_name],
+        cwd=INGESTION_DIR,
+        capture_output=True,
+        text=True,
+        timeout=900,
+        env=env,
+    )
+
+    if result.returncode != 0:
+        log.error("Spider %s stderr: %s", spider_name, result.stderr[-2000:])
+        raise RuntimeError(f"Spider {spider_name} failed: {result.stderr[-500:]}")
+
+    log.info("Spider %s completed", spider_name)
+    return {"status": "ok", "spider": spider_name}
+
+
+@app.task(bind=True, max_retries=1)
+def run_all_mena_spiders(self):
+    """Run all MENA law-focused spiders sequentially, then retag."""
+    results = []
+    for name in MENA_SPIDER_NAMES:
+        try:
+            results.append(_run_spider_subprocess(name))
+        except Exception as exc:
+            log.error("MENA spider %s failed: %s", name, exc)
+            results.append({"status": "error", "spider": name, "error": str(exc)})
+    retag_all_documents()
+    return {"spiders": results, "retag": "ok"}
+
+
+@app.task
+def retag_all_documents(limit: int | None = None):
+    """Backfill zones, sectors, and playbook impacts."""
+    from ingestion.retag_documents import retag_all
+
+    retag_all(limit=limit)
+    return {"status": "ok"}
+
 
 @app.task(bind=True, max_retries=3)
 def run_spider(self, spider_name: str):
-    """
-    Runs a Scrapy spider by name.
-    This is the function Celery calls on schedule.
-    """
-    env = os.environ.copy()
-    env["PYTHONPATH"] = PROJECT_ROOT
-
+    """Runs a Scrapy spider by name (Celery Beat / manual)."""
     try:
-        log.info("Starting spider: %s", spider_name)
-
-        result = subprocess.run(
-            ["scrapy", "crawl", spider_name],
-            cwd=INGESTION_DIR,
-            capture_output=True,
-            text=True,
-            timeout=600,
-            env=env,
-        )
-
-        if result.returncode != 0:
-            log.error("Spider %s stderr: %s", spider_name, result.stderr[-2000:])
-            raise RuntimeError(f"Spider failed: {result.stderr[-500:]}")
-
-        log.info("Spider %s completed successfully", spider_name)
-        if result.stdout:
-            log.info("Spider %s stdout (tail): %s", spider_name, result.stdout[-500:])
-
-        return {"status": "ok", "spider": spider_name}
-
+        return _run_spider_subprocess(spider_name)
     except Exception as exc:
         log.warning("Spider %s failed, scheduling retry: %s", spider_name, exc)
-        raise self.retry(exc=exc, countdown=60)
+        raise self.retry(exc=exc, countdown=60) from exc
 
 
 @app.task(bind=True, max_retries=2)

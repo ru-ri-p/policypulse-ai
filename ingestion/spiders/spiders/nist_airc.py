@@ -45,6 +45,8 @@ class NISTAircSpider(scrapy.Spider):
         item["content"] = content
         item["doc_type"] = "guidance"
         item["jurisdiction"] = "US"
-        item["published_at"] = None
+        from ingestion.date_extract import extract_published_from_response
+
+        item["published_at"] = extract_published_from_response(response)
         item["source_name"] = "NIST AI Resource Center"
         yield item

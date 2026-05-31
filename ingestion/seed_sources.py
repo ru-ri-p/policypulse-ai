@@ -6,7 +6,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ingestion.db import run_query
 
-# Define the 3 sources we will scrape in Week 2 and 3
 sources = [
     {
         "name": "EU AI Act Monitor",
@@ -41,7 +40,27 @@ sources = [
         "url": "https://www.gov.uk/government/organisations/ai-safety-institute",
         "jurisdiction": "UK",
     },
-    # ── Phase 8: MENA sources ──────────────────────────────────────
+    # ── MENA: law-focused sources (Phase 9) ─────────────────────────
+    {
+        "name": "UAE Federal Legislation",
+        "url": "https://www.uaelegislation.gov.ae/en/search?keyword=artificial+intelligence",
+        "jurisdiction": "UAE",
+    },
+    {
+        "name": "DFSA Rulebook",
+        "url": "https://www.dfsa.ae/what-we-do/legislation-and-rulebook",
+        "jurisdiction": "UAE",
+    },
+    {
+        "name": "DIFC Data & AI Regulation",
+        "url": "https://www.difc.ae/business/laws-and-regulations/",
+        "jurisdiction": "UAE",
+    },
+    {
+        "name": "ADGM FSRA",
+        "url": "https://www.adgm.com/legal-framework",
+        "jurisdiction": "UAE",
+    },
     {
         "name": "UAE AI Office",
         "url": "https://u.ae/en/about-the-uae/digital-uae/digital-technology/artificial-intelligence",
@@ -53,18 +72,8 @@ sources = [
         "jurisdiction": "UAE",
     },
     {
-        "name": "DIFC Data & AI Regulation",
-        "url": "https://www.difc.ae/business/laws-and-regulations/",
-        "jurisdiction": "UAE",
-    },
-    {
-        "name": "ADGM FSRA",
-        "url": "https://www.adgm.com/media/announcements",
-        "jurisdiction": "UAE",
-    },
-    {
         "name": "Saudi SDAIA",
-        "url": "https://sdaia.gov.sa/en/default.aspx",
+        "url": "https://sdaia.gov.sa/en/PDPL/Pages/default.aspx",
         "jurisdiction": "SA",
     },
 ]
@@ -76,11 +85,13 @@ def seed_sources():
             """
             INSERT INTO sources (name, url, jurisdiction)
             VALUES (%s, %s, %s)
-            ON CONFLICT (url) DO NOTHING
+            ON CONFLICT (url) DO UPDATE
+                SET name = EXCLUDED.name,
+                    jurisdiction = EXCLUDED.jurisdiction
             """,
             (source["name"], source["url"], source["jurisdiction"]),
         )
-        print(f"Inserted source: {source['name']}")
+        print(f"Upserted source: {source['name']}")
     print("Done seeding sources!")
 
 

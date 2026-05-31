@@ -120,6 +120,16 @@ pip install pytest pytest-asyncio httpx
 
 Covers: text cleaning, diff engine, classifier (mocked), semantic search (mocked), API endpoints (mocked DB).
 
+## MENA daily ingestion (Phase 9)
+
+Law-focused spiders run on **Celery Beat** (06:00–07:50 UTC). Manual:
+
+```bash
+./scripts/run_mena_spiders.sh
+```
+
+See [docs/phase9_mena_legal.md](docs/phase9_mena_legal.md).
+
 ## Phases (course roadmap)
 
 ### Phase 1–3 — Ingestion, Celery, API

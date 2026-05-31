@@ -1,0 +1,35 @@
+# Exposure packs — which jurisdictions/regions a client profile should monitor
+# Use for weekly briefs, feeds, and API filters.
+
+dubai_hq:
+  name: Dubai HQ — GCC, EU & US exposure
+  description: >
+    For organisations headquartered in Dubai/UAE that serve EU customers,
+    operate in DIFC/ADGM, or work with US companies (subsidiaries, vendors, cloud).
+  jurisdictions: [UAE, SA, EU, US, UK]
+  regions: [MENA, EU, US, UK]
+  default_playbooks:
+    - uae_mainland_general
+    - difc_financial_services
+    - adgm_financial_services
+    - cbuae_banking_ai
+    - eu_ai_act_exposure
+    - us_federal_ai_exposure
+
+mena_only:
+  name: GCC / MENA only
+  jurisdictions: [UAE, SA, QA, BH, KW, OM]
+  regions: [MENA]
+  default_playbooks:
+    - uae_mainland_general
+    - difc_financial_services
+    - adgm_financial_services
+    - cbuae_banking_ai
+    - sdaia_saudi
+
+eu_exposure_only:
+  name: EU extraterritorial (AI Act)
+  jurisdictions: [EU, UK]
+  regions: [EU, UK]
+  default_playbooks:
+    - eu_ai_act_exposure

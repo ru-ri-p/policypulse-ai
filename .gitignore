@@ -11,3 +11,5 @@ logs/
 celerybeat-schedule
 celerybeat.pid
 pgvector/
+dump.rdb
+docs/briefs/*.pdf

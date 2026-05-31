@@ -64,6 +64,8 @@ class UaeAiOfficeSpider(scrapy.Spider):
         item["content"] = content[:50000]
         item["doc_type"] = "policy guidance"
         item["jurisdiction"] = "UAE"
-        item["published_at"] = None
+        from ingestion.date_extract import extract_published_from_response
+
+        item["published_at"] = extract_published_from_response(response)
         item["source_name"] = SOURCE_NAME
         yield item

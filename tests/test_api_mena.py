@@ -1,4 +1,5 @@
 # tests/test_api_mena.py — Phase 8 API tests for region filtering
+from datetime import datetime
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
@@ -9,6 +10,7 @@ client = TestClient(app)
 
 
 def _uae_document_row():
+    added = datetime(2026, 5, 1, 9, 0, 0)
     return (
         101,
         "UAE AI Governance Framework",
@@ -20,6 +22,13 @@ def _uae_document_row():
         None,
         False,
         None,
+        added,
+        added,
+        None,
+        0,
+        ["MAINLAND"],
+        ["government"],
+        {"uae_mainland_general": {"level": "high", "name": "UAE Mainland", "summary": ""}},
         None,
         None,
         None,
@@ -30,6 +39,7 @@ def _uae_document_row():
 
 
 def _sa_document_row():
+    added = datetime(2026, 5, 2, 9, 0, 0)
     return (
         102,
         "Saudi PDPL Guidelines for AI",
@@ -41,6 +51,13 @@ def _sa_document_row():
         None,
         False,
         None,
+        added,
+        added,
+        None,
+        0,
+        ["MAINLAND"],
+        ["general"],
+        {"sdaia_saudi": {"level": "high", "name": "SDAIA", "summary": ""}},
         None,
         None,
         None,

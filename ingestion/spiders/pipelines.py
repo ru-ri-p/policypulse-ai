@@ -1,12 +1,16 @@
 # ingestion/spiders/pipelines.py
 import hashlib
+import json
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from ingestion.cleaner import clean_text
+from ingestion.date_extract import infer_document_published_at
 from ingestion.db import run_query
+from ingestion.regions import get_region
+from ingestion.tagging import tag_document
 
 
 class PostgresPipeline:
@@ -39,17 +43,41 @@ class PostgresPipeline:
             fetch=True,
         )
 
+        zones, sectors, impacts = tag_document(
+            item["title"] or "",
+            item["url"] or "",
+            content,
+            item["source_name"] or "",
+            item.get("jurisdiction"),
+        )
+        region = get_region(item.get("jurisdiction"))
+        impacts_json = json.dumps(impacts)
+        published_at = infer_document_published_at(
+            item["title"] or "",
+            item["url"] or "",
+            content,
+            item.get("source_name") or "",
+            item.get("published_at"),
+        )
+
         run_query(
             """
             INSERT INTO documents (
-                source_id, title, url, content, doc_type, jurisdiction, content_hash
+                source_id, title, url, content, doc_type, jurisdiction,
+                content_hash, zones, sectors, playbook_impacts, region,
+                first_scraped_at, published_at
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s, NOW(), %s)
             ON CONFLICT (url) DO UPDATE
                 SET content = EXCLUDED.content,
                     content_hash = EXCLUDED.content_hash,
                     scraped_at = NOW(),
-                    ml_processed_at = NULL
+                    ml_processed_at = NULL,
+                    zones = EXCLUDED.zones,
+                    sectors = EXCLUDED.sectors,
+                    playbook_impacts = EXCLUDED.playbook_impacts,
+                    region = EXCLUDED.region,
+                    published_at = COALESCE(EXCLUDED.published_at, documents.published_at)
             """,
             (
                 source_id,
@@ -59,6 +87,11 @@ class PostgresPipeline:
                 item.get("doc_type"),
                 item.get("jurisdiction"),
                 content_hash,
+                zones,
+                sectors,
+                impacts_json,
+                region,
+                published_at,
             ),
         )
 

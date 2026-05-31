@@ -1,78 +1,47 @@
-# ingestion/spiders/spiders/adgm_fsra.py — Phase 8: ADGM announcements + enabling tech guidelines
+# ingestion/spiders/spiders/adgm_fsra.py — ADGM legal framework & FSRA publications
 import scrapy
 
-from spiders.items import PolicyDocumentItem
+from spiders.spiders.mena_legal_utils import build_policy_item, follow_law_links, is_law_focused_url
 
 SOURCE_NAME = "ADGM FSRA"
-ADGM_DOMAIN = "www.adgm.com"
+ADGM_DOMAINS = ["www.adgm.com", "en.adgm.com"]
 
 
 class AdgmFsraSpider(scrapy.Spider):
-    """
-    Scrapes ADGM announcements and guidance related to AI, data, fintech,
-    and enabling technologies from Abu Dhabi Global Market.
-    """
+    """ADGM legislation, FSRA rulebooks, and regulatory publications."""
 
     name = "adgm_fsra"
-    allowed_domains = [ADGM_DOMAIN]
+    allowed_domains = ADGM_DOMAINS
 
     start_urls = [
-        "https://www.adgm.com/media/announcements",
+        "https://www.adgm.com/legal-framework",
+        "https://www.adgm.com/legal-framework/legislation",
+        "https://www.adgm.com/publications",
+        "https://en.adgm.com/fsra/rulemaking/standards-and-rulebooks",
+        "https://www.adgm.com/fsra/publications",
     ]
 
-    AI_KEYWORDS = {
-        "ai", "artificial intelligence", "machine learning", "data protection",
-        "digital", "technology", "fintech", "innovation", "regtech",
-        "enabling technology", "cyber", "blockchain", "web3",
-    }
+    custom_settings = {"DOWNLOAD_DELAY": 2}
 
     def parse(self, response):
-        self.logger.info("Parsing ADGM announcements: %s", response.url)
+        self.logger.info("Parsing ADGM legal: %s", response.url)
+
+        item = build_policy_item(
+            response, SOURCE_NAME, "UAE", require_legal_signal=False, doc_type="regulation"
+        )
+        if item:
+            yield item
+
+        yield from follow_law_links(response, ADGM_DOMAINS, self.parse_document)
 
         for href in response.css("a::attr(href)").getall():
             full_url = response.urljoin(href)
-            if ADGM_DOMAIN not in full_url:
+            if not any(d in full_url for d in ADGM_DOMAINS):
                 continue
-            if "/media/announcements/" not in full_url:
-                continue
-            if full_url.rstrip("/") == "https://www.adgm.com/media/announcements":
-                continue
-            yield scrapy.Request(full_url, callback=self.parse_document)
-
-        next_page = response.css('a[rel="next"]::attr(href)').get()
-        if next_page:
-            yield response.follow(next_page, callback=self.parse)
+            if is_law_focused_url(full_url) or "/fsra/" in full_url.lower():
+                yield scrapy.Request(full_url, callback=self.parse_document)
 
     def parse_document(self, response):
-        title = response.css("h1::text").get(default="").strip()
-        if not title:
-            title = response.css("title::text").get(default="Untitled").strip()
-
-        paragraphs = response.css(
-            "article p::text, main p::text, .rich-text p::text, "
-            ".content-block p::text, .announcement-content p::text"
-        ).getall()
-        content = " ".join(p.strip() for p in paragraphs if p.strip())
-
-        if len(content) < 80:
-            body_texts = response.css("main *::text, article *::text").getall()
-            content = " ".join(t.strip() for t in body_texts if len(t.strip()) > 20)
-
-        if len(content) < 80:
-            self.logger.warning("Skipping thin ADGM page: %s", response.url)
-            return
-
-        text_lower = (title + " " + content[:500]).lower()
-        if not any(kw in text_lower for kw in self.AI_KEYWORDS):
-            self.logger.debug("Skipping non-tech ADGM page: %s", title[:60])
-            return
-
-        item = PolicyDocumentItem()
-        item["title"] = title
-        item["url"] = response.url
-        item["content"] = content[:50000]
-        item["doc_type"] = "guidance"
-        item["jurisdiction"] = "UAE"
-        item["published_at"] = None
-        item["source_name"] = SOURCE_NAME
-        yield item
+        item = build_policy_item(response, SOURCE_NAME, "UAE", doc_type="regulation")
+        if item:
+            yield item

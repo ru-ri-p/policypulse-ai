@@ -39,7 +39,8 @@ class FederalRegisterSpider(scrapy.Spider):
             item["content"] = content
             item["doc_type"] = (doc.get("type") or "notice").lower()
             item["jurisdiction"] = "US"
-            item["published_at"] = doc.get("publication_date")
+            pub = doc.get("publication_date")
+            item["published_at"] = pub if pub else None
             item["source_name"] = "US Federal Register - AI"
             yield item
 
